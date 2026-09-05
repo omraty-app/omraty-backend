@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: omraty
+      POSTGRES_USER: ${DB_USERNAME:-omraty}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  app:
+    image: ghcr.io/abdelalaoui/omraty-backend:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/omraty
+      DB_USERNAME: ${DB_USERNAME:-omraty}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_ACCESS_EXP_MINUTES: ${JWT_ACCESS_EXP_MINUTES:-15}
+      JWT_REFRESH_EXP_DAYS: ${JWT_REFRESH_EXP_DAYS:-30}
+    ports:
+      - "8080:8080"
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  db_data:
